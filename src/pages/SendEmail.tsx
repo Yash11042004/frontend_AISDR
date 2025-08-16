@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import DashboardLayout from "../components/DashboardLayout";
+import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "../components/ui/button";
 import { Textarea } from "../components/ui/textarea";
 import {

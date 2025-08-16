@@ -22,9 +22,9 @@ export default function GenerateEmailButton({
     setLoading(true);
     try {
       const res = await axios.post(
-        "https://openrouter.ai/api/v1/chat/completions",
+        `${import.meta.env.VITE_API_BASE_URL}/api/generate-email`,
         {
-          model: "mistralai/mistral-7b-instruct", // or any supported free model
+          model: "mistralai/mistral-7b-instruct",
           messages: [
             {
               role: "system",
@@ -37,12 +37,6 @@ export default function GenerateEmailButton({
               }.`,
             },
           ],
-        },
-        {
-          headers: {
-            Authorization: `Bearer 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`, // Replace this
-            "Content-Type": "application/json",
-          },
         }
       );
 
