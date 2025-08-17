@@ -5,7 +5,7 @@ import { Button } from "../components/ui/button";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { Input } from "../components/ui/input";
 import { useToast } from "../components/ui/use-toast";
-import { API_BASE_URL } from "../utils/api"; // ✅ import the base URL
+import { API_BASE_URL } from "../utils/api";
 
 export default function ImportPage() {
   const [uploading, setUploading] = useState(false);
@@ -53,7 +53,41 @@ export default function ImportPage() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-3xl mx-auto">
+      <div className="relative max-w-3xl mx-auto mt-20">
+        {/* Background floating particles */}
+        <div className="absolute inset-0 -z-10 overflow-hidden">
+          {[...Array(5)].map((_, i) => (
+            <span
+              key={i}
+              className="absolute rounded-full opacity-20"
+              style={{
+                width: `${150 + Math.random() * 200}px`,
+                height: `${150 + Math.random() * 200}px`,
+                background: `radial-gradient(circle, rgba(255,200,255,0.4), transparent 70%)`,
+                top: `${Math.random() * 100}%`,
+                left: `${Math.random() * 100}%`,
+                animation: `float-bg ${
+                  20 + Math.random() * 20
+                }s ease-in-out infinite`,
+                animationDelay: `${Math.random() * 5}s`,
+              }}
+            />
+          ))}
+
+          {[...Array(20)].map((_, i) => (
+            <span
+              key={`p${i}`}
+              className="absolute w-2 h-2 bg-white/30 rounded-full animate-float"
+              style={{
+                top: `${Math.random() * 100}%`,
+                left: `${Math.random() * 100}%`,
+                animationDuration: `${5 + Math.random() * 10}s`,
+                animationDelay: `${Math.random() * 5}s`,
+              }}
+            />
+          ))}
+        </div>
+
         <div className="flex items-center mb-6">
           <Button
             variant="ghost"
@@ -96,7 +130,7 @@ export default function ImportPage() {
               {importedProspects.map((p, i) => (
                 <div
                   key={i}
-                  className="border p-3 rounded bg-secondary/30 text-sm"
+                  className="border p-3 rounded bg-secondary/30 text-sm backdrop-blur-sm shadow-md"
                 >
                   <p className="font-medium">
                     {p.name} ({p.title})
@@ -109,6 +143,23 @@ export default function ImportPage() {
           </div>
         )}
       </div>
+
+      <style>
+        {`
+          @keyframes float {
+            0% { transform: translateY(0) translateX(0) scale(1); opacity: 0.3; }
+            50% { transform: translateY(-20px) translateX(10px) scale(1.05); opacity: 0.6; }
+            100% { transform: translateY(0) translateX(0) scale(1); opacity: 0.3; }
+          }
+          .animate-float { animation-name: float; animation-timing-function: ease-in-out; animation-iteration-count: infinite; }
+
+          @keyframes float-bg {
+            0% { transform: translateY(0px) translateX(0px); }
+            50% { transform: translateY(-30px) translateX(20px); }
+            100% { transform: translateY(0px) translateX(0px); }
+          }
+        `}
+      </style>
     </DashboardLayout>
   );
 }

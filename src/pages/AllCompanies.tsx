@@ -7,7 +7,7 @@ import {
   CardTitle,
 } from "../components/ui/card";
 import { Button } from "../components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Building2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../utils/api";
 
@@ -42,41 +42,55 @@ export default function AllCompanies() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-6xl">
-        <div className="flex items-center mb-6">
-          <Link to="/">
-            <Button variant="ghost" size="sm" className="mr-4">
+      <div className="max-w-6xl mx-auto py-6 px-4">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center mb-8 gap-4">
+          <Link to="/ai-sdr-dashboard">
+            <Button
+              variant="secondary"
+              size="sm"
+              className="flex items-center bg-indigo-600 text-white hover:bg-indigo-700"
+            >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Dashboard
             </Button>
           </Link>
-          <h1 className="text-2xl font-semibold">All Companies</h1>
+          <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900">
+            All Companies
+          </h1>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Companies in Latest Campaign</CardTitle>
+        {/* Companies Card */}
+        <Card className="bg-gray-50 shadow-lg border border-gray-200">
+          <CardHeader className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <CardTitle className="text-lg sm:text-xl text-gray-900">
+              Companies in Latest Campaign
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {companyPeople.length === 0 ? (
-              <p className="text-muted-foreground">No companies found.</p>
+              <p className="text-gray-500">No companies found.</p>
             ) : (
-              [...companyPeople].map((person) => (
+              companyPeople.map((person) => (
                 <div
                   key={person._id}
-                  className="p-4 bg-secondary/50 rounded-md border flex justify-between items-center"
+                  className="p-4 bg-white rounded-md border border-gray-200 flex justify-between items-center shadow-sm hover:shadow-md transition"
                 >
-                  <div>
-                    <p className="text-base font-semibold">
-                      {person.organization_name}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {person.name} - {person.title}
-                    </p>
+                  <div className="flex items-center gap-3">
+                    <Building2 className="text-indigo-600 w-6 h-6" />
+                    <div>
+                      <p className="text-base font-semibold text-gray-900">
+                        {person.organization_name}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        {person.name} - {person.title}
+                      </p>
+                    </div>
                   </div>
                   <Button
                     size="sm"
                     variant="secondary"
+                    className="bg-green-500 text-white hover:bg-green-600"
                     onClick={() =>
                       navigate(
                         `/prospects?company=${encodeURIComponent(

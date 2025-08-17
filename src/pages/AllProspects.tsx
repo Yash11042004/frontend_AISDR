@@ -10,7 +10,7 @@ import {
 import { Button } from "../components/ui/button";
 import { ArrowLeft, Linkedin, Upload } from "lucide-react";
 import { Input } from "../components/ui/input";
-import { API_BASE_URL } from "../utils/api"; // <--- use dynamic base URL
+import { API_BASE_URL } from "../utils/api";
 
 type CampaignPerson = {
   name: string;
@@ -42,7 +42,6 @@ export default function AllProspects() {
     fetchAll();
   }, []);
 
-  // Filter by company or search query
   const filtered = campaignPeople.filter((p) => {
     const matchesCompany = companyFilter
       ? p.organization_name === companyFilter
@@ -53,13 +52,10 @@ export default function AllProspects() {
     return matchesCompany && matchesSearch;
   });
 
-  // Group by company name
   const groupedByCompany: { [key: string]: CampaignPerson[] } = {};
   filtered.forEach((person) => {
     const org = person.organization_name;
-    if (!groupedByCompany[org]) {
-      groupedByCompany[org] = [];
-    }
+    if (!groupedByCompany[org]) groupedByCompany[org] = [];
     groupedByCompany[org].push(person);
   });
 
@@ -67,99 +63,123 @@ export default function AllProspects() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-6xl">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center">
-            <Link to="/">
-              <Button variant="ghost" size="sm" className="mr-4">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Dashboard
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+          <div className="flex items-center gap-4 flex-wrap">
+            <Link to="/ai-sdr-dashboard">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex items-center gap-2"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Back
               </Button>
             </Link>
             <div>
-              <h1 className="text-2xl font-semibold">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
                 {companyFilter
                   ? `Prospects at ${companyFilter}`
                   : "All Prospects"}
               </h1>
               {!companyFilter && (
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-gray-500">
                   Showing grouped prospects by company
                 </p>
               )}
             </div>
           </div>
 
-          <Button variant="default" onClick={() => navigate("/import")}>
+          <Button
+            variant="default"
+            className="bg-gradient-to-r from-indigo-600 to-blue-500 text-white hover:from-indigo-700 hover:to-blue-600 w-full sm:w-auto"
+            onClick={() => navigate("/import")}
+          >
             <Upload className="w-4 h-4 mr-2" />
             Import Data
           </Button>
         </div>
 
+        {/* Search */}
         <div className="mb-6">
           <Input
             placeholder="Search by company or person name..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            className="bg-white shadow-sm rounded-lg w-full sm:w-96"
           />
         </div>
 
+        {/* Prospects */}
         {companiesToShow.length === 0 ? (
-          <Card>
-            <CardContent className="p-6">
-              <p className="text-muted-foreground">No prospects found.</p>
+          <Card className="bg-white shadow-md rounded-xl">
+            <CardContent className="p-6 text-center text-gray-500">
+              No prospects found.
             </CardContent>
           </Card>
         ) : (
           companiesToShow.map((company) => (
-            <Card key={company} className="mb-6">
-              <CardHeader className="flex flex-row justify-between items-center">
-                <CardTitle>{company}</CardTitle>
+            <Card
+              key={company}
+              className="mb-6 shadow-lg rounded-xl hover:shadow-xl transition-all"
+            >
+              <CardHeader className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-gradient-to-r from-indigo-100 to-blue-50 p-4 rounded-t-xl">
+                <CardTitle className="text-lg font-bold text-gray-800">
+                  {company}
+                </CardTitle>
                 {!companyFilter && (
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-wrap w-full sm:w-auto">
                     <Link
                       to={`/prospects?company=${encodeURIComponent(company)}`}
+                      className="w-full sm:w-auto"
                     >
-                      <Button variant="outline" size="sm">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-indigo-500 text-indigo-600 hover:bg-indigo-50 w-full sm:w-auto"
+                      >
                         View Only
                       </Button>
                     </Link>
-                    <Link to={`/email?company=${encodeURIComponent(company)}`}>
-                      <Button variant="outline" size="sm">
+                    <Link
+                      to={`/email?company=${encodeURIComponent(company)}`}
+                      className="w-full sm:w-auto"
+                    >
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-blue-500 text-blue-600 hover:bg-blue-50 w-full sm:w-auto"
+                      >
                         Create Email
                       </Button>
                     </Link>
                   </div>
                 )}
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 p-4 bg-white">
                 {groupedByCompany[company]
                   .sort((a, b) => a.title.localeCompare(b.title))
                   .map((person) => (
                     <div
                       key={person._id}
-                      className="p-4 bg-secondary/50 rounded-md border"
+                      className="p-4 rounded-lg border border-gray-200 hover:shadow-md transition-all flex flex-col sm:flex-row justify-between items-start sm:items-center bg-gradient-to-r from-gray-50 to-white gap-2 sm:gap-0"
                     >
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="text-base font-semibold">
-                            {person.name}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {person.title}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {person.email}
-                          </p>
-                        </div>
-                        <a
-                          href={person.linkedin_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          <Linkedin className="w-5 h-5 text-blue-600 hover:underline" />
-                        </a>
+                      <div>
+                        <p className="text-base font-semibold text-gray-900">
+                          {person.name}
+                        </p>
+                        <p className="text-sm text-gray-500">{person.title}</p>
+                        <p className="text-sm text-gray-500">{person.email}</p>
                       </div>
+                      <a
+                        href={person.linkedin_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-2 sm:mt-0"
+                      >
+                        <Linkedin className="w-5 h-5 text-blue-600 hover:text-blue-800 transition-colors" />
+                      </a>
                     </div>
                   ))}
               </CardContent>

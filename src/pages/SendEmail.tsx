@@ -125,7 +125,6 @@ export default function SendEmail() {
   };
 
   const sendEmails = async () => {
-    // Ensure all emails are generated before sending
     await generateAllEmails();
 
     const recipients = people
@@ -147,11 +146,14 @@ export default function SendEmail() {
 
     try {
       setSending(true);
-      const res = await fetch(`${API_BASE_URL}/api/send-emails`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ recipients }),
-      });
+      const res = await fetch(
+        "https://admin-zicloud1.app.n8n.cloud/webhook/send-emails",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ recipients }),
+        }
+      );
 
       if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
 
@@ -160,7 +162,7 @@ export default function SendEmail() {
         description: `${recipients.length} emails were delivered.`,
       });
 
-      navigate("/prospects");
+      navigate("/sent-emails", { state: { sentData: recipients } });
     } catch (err: any) {
       toast({
         title: "❌ Failed to send emails",
@@ -174,112 +176,135 @@ export default function SendEmail() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-4xl mx-auto space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Send Email to Prospects at {company}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Textarea
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              placeholder="Enter prompt. Use [NAME] and [COMPANY] as placeholders."
-            />
-          </CardContent>
-        </Card>
-
-        {loading ? (
-          <p>Loading prospects...</p>
-        ) : people.length === 0 ? (
-          <p>No prospects found for this company.</p>
-        ) : (
-          <Card>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-indigo-50 to-purple-100 p-6 md:p-10">
+        <div className="max-w-5xl mx-auto space-y-8">
+          {/* Prompt Section */}
+          <Card className="backdrop-blur-lg bg-white/80 shadow-xl border border-gray-200">
             <CardHeader>
-              <CardTitle>
-                Prospects ({selectedEmails.length}/{people.length} selected)
+              <CardTitle className="text-2xl font-bold text-gray-900">
+                ✍️ Craft Your Prompt
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {people.map((person) => (
-                <div
-                  key={person.email}
-                  className="border rounded-md p-4 flex flex-col gap-2 bg-secondary/40"
-                >
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <p className="font-medium">{person.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {person.title} • {person.email}
-                      </p>
-                    </div>
-                    <Checkbox
-                      checked={selectedEmails.includes(person.email)}
-                      onCheckedChange={() => toggleSelect(person.email)}
-                    />
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => generateEmail(person)}
-                      disabled={loadingEmails[person.email]}
-                    >
-                      {generatedEmails[person.email]
-                        ? "Regenerate"
-                        : "Generate Email"}
-                    </Button>
-
-                    {loadingEmails[person.email] && (
-                      <Loader2 className="animate-spin w-4 h-4 text-muted-foreground" />
-                    )}
-                  </div>
-
-                  {generatedEmails[person.email] && (
-                    <pre className="text-sm bg-muted p-2 rounded whitespace-pre-wrap">
-                      {generatedEmails[person.email]}
-                    </pre>
-                  )}
-                </div>
-              ))}
+            <CardContent>
+              <Textarea
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                className="w-full min-h-[120px] resize-none p-4 text-base border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-400"
+                placeholder="Enter prompt. Use [NAME] and [COMPANY] as placeholders."
+              />
             </CardContent>
           </Card>
-        )}
 
-        <div className="flex flex-wrap gap-4 mt-4 items-center">
-          <Button
-            className="bg-primary text-white"
-            disabled={selectedEmails.length === 0 || sending}
-            onClick={sendEmails}
-          >
-            {sending ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                Sending...
-              </>
-            ) : (
-              "Send Email to Selected"
-            )}
-          </Button>
+          {/* Prospects Section */}
+          {loading ? (
+            <p className="text-center text-gray-500">Loading prospects...</p>
+          ) : people.length === 0 ? (
+            <p className="text-center text-gray-500">
+              No prospects found for <b>{company}</b>.
+            </p>
+          ) : (
+            <Card className="backdrop-blur-lg bg-white/80 shadow-xl border border-gray-200">
+              <CardHeader>
+                <CardTitle className="text-2xl font-semibold text-gray-900">
+                  👥 Prospects ({selectedEmails.length}/{people.length}{" "}
+                  selected)
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2">
+                  {people.map((person) => (
+                    <div
+                      key={person.email}
+                      className="p-5 rounded-xl border border-gray-200 bg-white shadow-sm hover:shadow-lg transition-all flex flex-col gap-3"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-semibold text-lg text-gray-900">
+                            {person.name}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            {person.title} • {person.organization_name}
+                          </p>
+                          <p className="text-xs text-indigo-600 break-all">
+                            {person.email}
+                          </p>
+                        </div>
+                        <Checkbox
+                          checked={selectedEmails.includes(person.email)}
+                          onCheckedChange={() => toggleSelect(person.email)}
+                        />
+                      </div>
 
-          <Button
-            variant="outline"
-            onClick={generateAllEmails}
-            disabled={selectedEmails.length === 0 || generating}
-          >
-            {generating ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                Generating...
-              </>
-            ) : (
-              "Generate All Emails"
-            )}
-          </Button>
+                      <div className="flex items-center gap-3">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => generateEmail(person)}
+                          disabled={loadingEmails[person.email]}
+                        >
+                          {generatedEmails[person.email]
+                            ? "Regenerate"
+                            : "Generate Email"}
+                        </Button>
 
-          <Button variant="secondary" onClick={() => navigate("/prospects")}>
-            ← Back
-          </Button>
+                        {loadingEmails[person.email] && (
+                          <Loader2 className="animate-spin w-4 h-4 text-gray-500" />
+                        )}
+                      </div>
+
+                      {generatedEmails[person.email] && (
+                        <div className="rounded-lg bg-gray-50 p-3 text-sm text-gray-800 shadow-inner max-h-48 overflow-y-auto whitespace-pre-wrap">
+                          {generatedEmails[person.email]}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Actions */}
+          <div className="flex flex-wrap gap-4 justify-end">
+            <Button
+              className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg shadow-md"
+              disabled={selectedEmails.length === 0 || sending}
+              onClick={sendEmails}
+            >
+              {sending ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  Sending...
+                </>
+              ) : (
+                "🚀 Send Email to Selected"
+              )}
+            </Button>
+
+            <Button
+              variant="outline"
+              className="px-6 py-2 rounded-lg"
+              onClick={generateAllEmails}
+              disabled={selectedEmails.length === 0 || generating}
+            >
+              {generating ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  Generating...
+                </>
+              ) : (
+                "⚡ Generate All Emails"
+              )}
+            </Button>
+
+            <Button
+              variant="secondary"
+              className="px-6 py-2 rounded-lg"
+              onClick={() => navigate("/prospects")}
+            >
+              ← Back
+            </Button>
+          </div>
         </div>
       </div>
     </DashboardLayout>

@@ -1,14 +1,21 @@
 import { useState, useEffect, useRef } from "react";
 import DashboardLayout from "../components/DashboardLayout";
 import { Button } from "../components/ui/button";
-import { useToast } from "../components/ui/use-toast";
+import { toast } from "../components/ui/sonner"; // ✅ use Sonner toast
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { motion, AnimatePresence } from "framer-motion";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL;
 
+const QUICK_PROMPTS = [
+  "Tech Directors in US",
+  "Marketing Managers in Fintech",
+  "Founders in AI startups",
+  "Sales executives in HealthTech",
+];
+
 export default function NewCampaign() {
-  const { toast } = useToast();
   const navigate = useNavigate();
   const chatEndRef = useRef<HTMLDivElement | null>(null);
 
@@ -16,7 +23,7 @@ export default function NewCampaign() {
     {
       role: "bot",
       message:
-        "👋 Hi! Tell me about the leads you're looking for (e.g., 'I want Directors from the Tech industry in the US who recently got funding').",
+        "👋 Hi! Tell me about the leads you're looking for (e.g., 'I want Directors from the Tech industry in the US').",
     },
   ]);
   const [userInput, setUserInput] = useState("");
@@ -30,23 +37,39 @@ export default function NewCampaign() {
   const [loading, setLoading] = useState(false);
   const [finalPrompt, setFinalPrompt] = useState("");
   const [step, setStep] = useState(0);
+  const [showChat, setShowChat] = useState(false);
+  const [showQuickPrompts, setShowQuickPrompts] = useState(false);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatHistory]);
 
-  // 🔔 Show reminder toast after 3rd bot message if user hasn’t ended
+  // Show quick prompts after 2s
   useEffect(() => {
-    const botMessages = chatHistory.filter((m) => m.role === "bot").length;
-    if (botMessages === 3 && step === 0) {
-      toast({
-        title: "💡 Tip",
+    const timer = setTimeout(() => setShowQuickPrompts(true), 2000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // ✅ Show toast when chat panel opens & dismiss when closed
+  useEffect(() => {
+    if (showChat) {
+      toast.dismiss("chat-tip"); // prevent duplicates
+      toast("💡 Tip", {
+        id: "chat-tip",
         description:
-          'Type "yes", "done", or "continue" when you are ready to generate the campaign prompt.',
-        duration: 6000, // stays visible for 6s
+          "When ready, type 'done', 'continue', or 'yes' to summarize and trigger your workflow.",
+        duration: Infinity,
+        className:
+          "bg-white text-gray-900 border border-gray-200 shadow-lg rounded-xl",
       });
+    } else {
+      toast.dismiss("chat-tip");
     }
-  }, [chatHistory, step, toast]);
+
+    return () => {
+      toast.dismiss("chat-tip"); // cleanup on unmount
+    };
+  }, [showChat]);
 
   const generateResponse = async (chatHistory: any[]) => {
     try {
@@ -116,6 +139,9 @@ When the user says "done", "continue", or "yes", stop asking questions and summa
   const handleSend = async () => {
     if (!userInput.trim()) return;
 
+    // ✅ Chat panel opens only after first input
+    if (!showChat) setShowChat(true);
+
     const newHistory = [...chatHistory, { role: "user", message: userInput }];
     setChatHistory(newHistory);
 
@@ -168,22 +194,24 @@ Example:
     setAnswers(updatedAnswers);
   };
 
+  const handleQuickPrompt = (prompt: string) => {
+    setUserInput(prompt);
+    handleSend();
+  };
+
   const handleConfirm = async () => {
     if (!finalPrompt.trim()) {
-      toast({ title: "⚠️ No final prompt available to send to workflow" });
+      toast("⚠️ No final prompt available to send to workflow");
       return;
     }
 
     try {
       setLoading(true);
-      console.log("Triggering n8n with prompt:", finalPrompt);
 
       const response = await axios.post(
         "https://admin-zicloud1.app.n8n.cloud/webhook/prompt-intent",
         { prompt: finalPrompt },
-        {
-          headers: { "Content-Type": "application/json" },
-        }
+        { headers: { "Content-Type": "application/json" } }
       );
 
       const data = Array.isArray(response.data)
@@ -226,7 +254,7 @@ Example:
       navigate("/campaign-leads");
     } catch (error) {
       console.error("Workflow trigger error:", error);
-      toast({ title: "❌ Failed to trigger workflow" });
+      toast("❌ Failed to trigger workflow");
     } finally {
       setLoading(false);
     }
@@ -249,57 +277,154 @@ Example:
       },
     ]);
     setStep(0);
+    setShowChat(false);
   };
 
   return (
     <DashboardLayout>
-      <div className="max-w-2xl mx-auto px-4 py-8">
-        <h2 className="text-2xl font-semibold mb-4">Campaign Chat Assistant</h2>
-
-        <div className="bg-muted rounded-lg p-4 h-[400px] overflow-y-auto mb-4">
-          {chatHistory.map((msg, idx) => (
-            <div
-              key={idx}
-              className={`mb-2 ${
-                msg.role === "user" ? "text-right" : "text-left"
-              }`}
+      <div className="relative min-h-screen flex items-center justify-center px-4">
+        {/* Prompt overlay */}
+        <AnimatePresence>
+          {!showChat && (
+            <motion.div
+              key="promptScreen"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 flex flex-col items-center justify-center px-4"
+              style={{
+                background:
+                  "linear-gradient(135deg, #1E3C72, #2A5298, #00C9FF, #92FE9D)",
+                backgroundSize: "400% 400%",
+                animation: "gradientShift 18s ease infinite",
+              }}
             >
-              <div
-                className={`inline-block px-4 py-2 rounded-lg max-w-[80%] whitespace-pre-wrap ${
-                  msg.role === "user"
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-200 text-black"
-                }`}
-              >
-                {msg.message}
+              <h1 className="text-4xl font-bold mb-6 text-center text-white drop-shadow-lg">
+                Start Your Lead Campaign
+              </h1>
+              <div className="relative w-full max-w-xl">
+                <input
+                  type="text"
+                  placeholder="Describe your target leads..."
+                  value={userInput}
+                  onChange={(e) => setUserInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                  className="w-full px-6 py-4 rounded-xl text-lg text-gray-900 focus:outline-none focus:ring-4 focus:ring-blue-300"
+                />
+                {/* 3D typing hint */}
+                <motion.div
+                  animate={{ y: [0, -10, 0] }}
+                  transition={{ repeat: Infinity, duration: 1 }}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white text-xl animate-bounce"
+                >
+                  ⌨️
+                </motion.div>
               </div>
-            </div>
-          ))}
-          <div ref={chatEndRef} />
-        </div>
 
-        {step === 0 ? (
-          <div className="flex items-center gap-2">
-            <input
-              className="flex-grow px-4 py-2 border rounded-lg focus:outline-none"
-              placeholder="Type your request..."
-              value={userInput}
-              onChange={(e) => setUserInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSend()}
-            />
-            <Button onClick={handleSend}>Send</Button>
-          </div>
-        ) : (
-          <div className="flex justify-end gap-4 mt-4">
-            <Button variant="outline" onClick={handleStartOver}>
-              Start Over
-            </Button>
-            <Button onClick={handleConfirm} disabled={loading}>
-              {loading ? "Creating..." : "Confirm & Continue"}
-            </Button>
-          </div>
+              {/* Instructions */}
+              <p className="mt-4 text-center text-sm text-white/80 max-w-md">
+                Type your prompt and press Enter, or choose a quick prompt
+                below.
+                <br />
+                When you're ready, type <span className="font-bold">
+                  done
+                </span>, <span className="font-bold">continue</span> or{" "}
+                <span className="font-bold">yes</span> to summarize and start
+                generating.
+              </p>
+
+              {/* Sliding quick prompts */}
+              <AnimatePresence>
+                {showQuickPrompts && (
+                  <motion.div
+                    key="quickPrompts"
+                    initial={{ y: 50, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: 50, opacity: 0 }}
+                    transition={{ type: "spring", stiffness: 100 }}
+                    className="mt-6 flex flex-wrap justify-center gap-3 max-w-xl"
+                  >
+                    {QUICK_PROMPTS.map((q) => (
+                      <Button
+                        key={q}
+                        size="sm"
+                        variant="outline"
+                        className="text-gray-900 bg-white hover:bg-gray-100"
+                        onClick={() => handleQuickPrompt(q)}
+                      >
+                        {q}
+                      </Button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Chat panel */}
+        {showChat && (
+          <motion.div
+            key="chatPanel"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="w-full max-w-3xl flex flex-col gap-4"
+          >
+            <div className="flex flex-col gap-3 overflow-y-auto max-h-[70vh] px-4 py-2 bg-white rounded-xl shadow-lg">
+              {chatHistory.map((msg, idx) => (
+                <div
+                  key={idx}
+                  className={`p-3 rounded-xl max-w-[80%] ${
+                    msg.role === "bot"
+                      ? "bg-blue-100 self-start"
+                      : "bg-gray-200 self-end"
+                  }`}
+                >
+                  {msg.message}
+                </div>
+              ))}
+              <div ref={chatEndRef} />
+            </div>
+
+            <div className="flex gap-2 mt-2">
+              <input
+                type="text"
+                className="flex-1 px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-blue-400"
+                value={userInput}
+                onChange={(e) => setUserInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                placeholder="Type here..."
+              />
+              <Button onClick={handleSend}>Send</Button>
+            </div>
+
+            {step === 1 && (
+              <div className="flex gap-2 mt-2">
+                <Button onClick={handleConfirm} disabled={loading}>
+                  {loading ? "Running..." : "Confirm & Run Workflow"}
+                </Button>
+                <Button
+                  variant="outline"
+                  className="bg-white text-gray-800 border-gray-300 hover:bg-gray-100"
+                  onClick={handleStartOver}
+                >
+                  Start Over
+                </Button>
+              </div>
+            )}
+          </motion.div>
         )}
       </div>
+
+      <style>
+        {`
+          @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+          }
+        `}
+      </style>
     </DashboardLayout>
   );
 }

@@ -1,173 +1,162 @@
-import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
-import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
-import { Progress } from "../components/ui/progress";
-import {
-  ArrowLeft,
-  BarChart3,
-  Bell,
-  Crown,
-  FileText,
-  Headphones,
-  HelpCircle,
-  LayoutDashboard,
-  Megaphone,
-  Settings,
-  Users,
-  Cloud,
-} from "lucide-react";
+import { Headphones, Lock } from "lucide-react";
 import { Link } from "react-router-dom";
-
-const navigationItems = [
-  { icon: LayoutDashboard, label: "Dashboard", isActive: true },
-  { icon: Megaphone, label: "Campaigns", isActive: false },
-  { icon: Users, label: "Prospects", isActive: false },
-  { icon: BarChart3, label: "Analytics", isActive: false },
-];
+import DashboardLayout from "../components/DashboardLayout";
 
 const featureCards = [
   {
-    icon: Headphones,
     title: "AI SDR",
     description:
-      "Automate outreach and qualifies leads through smart conversations.",
+      "Automate outreach and qualify leads through smart conversations.",
+    icon: Headphones,
+    link: "/ai-sdr-dashboard",
+    locked: false,
   },
   {
-    icon: FileText,
     title: "Invoice",
-    description:
-      "Automate invoice processing, and tracking with smart data extraction",
+    description: "Coming soon",
+    icon: Lock,
+    link: "#",
+    locked: true,
   },
 ];
 
 export default function Dashboard() {
   return (
-    <div className="bg-[#101012] flex w-full min-h-screen overflow-hidden">
-      {/* Sidebar */}
-      <div className="w-[65%] max-w-[240px] min-h-full bg-white rounded-r-2xl relative p-5 shadow-xl border-r border-gray-200">
-        <div className="flex items-center justify-between mb-10">
-          <div className="flex items-center gap-2">
-            <Cloud className="h-6 w-6 text-[#101012]" />
-            <span className="text-lg font-semibold text-[#101012]">
-              Zi Cloud
-            </span>
-          </div>
-          <Button
-            variant="outline"
-            size="icon"
-            className="w-[34px] h-[34px] bg-[#101012] border-[3px] border-[#f7f5f2] hover:bg-[#101012]"
-          >
-            <ArrowLeft className="w-[20px] h-[20px] text-white" />
-          </Button>
+    <DashboardLayout>
+      <div className="relative flex flex-col items-center gap-8 mt-20">
+        {/* Background glows */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {/* Moving radial glow circles */}
+          {[...Array(5)].map((_, i) => (
+            <span
+              key={i}
+              className="absolute rounded-full opacity-20"
+              style={{
+                width: `${150 + Math.random() * 200}px`,
+                height: `${150 + Math.random() * 200}px`,
+                background: `radial-gradient(circle, rgba(255,200,255,0.4), transparent 70%)`,
+                top: `${Math.random() * 100}%`,
+                left: `${Math.random() * 100}%`,
+                animation: `float-bg ${
+                  20 + Math.random() * 20
+                }s ease-in-out infinite`,
+                animationDelay: `${Math.random() * 5}s`,
+              }}
+            />
+          ))}
+
+          {/* Floating particles */}
+          {[...Array(15)].map((_, i) => (
+            <span
+              key={`p${i}`}
+              className={`absolute w-3 h-3 bg-white/30 rounded-full animate-float`}
+              style={{
+                top: `${Math.random() * 100}%`,
+                left: `${Math.random() * 100}%`,
+                animationDuration: `${5 + Math.random() * 10}s`,
+                animationDelay: `${Math.random() * 5}s`,
+              }}
+            ></span>
+          ))}
         </div>
 
-        <div className="flex flex-col justify-between h-full">
-          <div className="space-y-2">
-            {navigationItems.map((item, index) => (
-              <div
+        <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 gap-6">
+          {featureCards.map((card, index) => {
+            const cardContent = (
+              <Card
                 key={index}
-                className={`$${
-                  item.isActive
-                    ? "bg-[#f7f5f2] border-l-4 border-gradient-to-b from-[#FFAD00] to-[#FF6D62]"
-                    : "bg-white"
-                } flex items-center gap-4 px-6 py-3 rounded-md`}
+                className={`relative overflow-hidden p-6 flex flex-col items-center text-center gap-4 rounded-3xl shadow-2xl transition-transform transform hover:scale-105 animate-floating-3d ${
+                  card.locked
+                    ? "bg-gray-100 text-gray-500 cursor-not-allowed"
+                    : "text-white"
+                }`}
               >
-                <item.icon className="w-6 h-6" />
-                <span
-                  className={`text-base font-normal $$
-                    {item.isActive ? "text-[#2b2e48]" : "text-gray-600"}`}
-                >
-                  {item.label}
-                </span>
-              </div>
-            ))}
-          </div>
+                {/* Aura behind card */}
+                {!card.locked && (
+                  <span className="absolute inset-0 rounded-3xl bg-gradient-to-r from-purple-500 via-pink-500 to-indigo-500 opacity-40 animate-pulse-slow blur-3xl"></span>
+                )}
 
-          <div className="flex items-center gap-4 px-6 py-3">
-            <Settings className="w-6 h-6" />
-            <span className="text-base text-gray-600">Settings</span>
-          </div>
+                {!card.locked && (
+                  <span className="absolute top-0 left-0 w-full h-full bg-white/10 animate-shimmer pointer-events-none rounded-3xl"></span>
+                )}
+
+                <div
+                  className={`relative z-10 w-20 h-20 flex items-center justify-center rounded-full mb-2 shadow-xl ${
+                    card.locked
+                      ? "bg-gray-300 text-gray-500 shadow-md"
+                      : "bg-white/20 backdrop-blur-sm text-white shadow-[0_0_60px_rgba(255,0,200,0.8)]"
+                  }`}
+                >
+                  <card.icon className="w-8 h-8 animate-pulse" />
+                </div>
+
+                <h2 className="relative z-10 text-xl font-bold">
+                  {card.title}
+                </h2>
+                <p className="relative z-10 text-sm">{card.description}</p>
+              </Card>
+            );
+
+            return card.locked ? (
+              cardContent
+            ) : (
+              <Link key={index} to={card.link}>
+                {cardContent}
+              </Link>
+            );
+          })}
         </div>
+
+        <p className="text-gray-400 text-sm text-center mt-6">
+          Many more features coming soon...
+        </p>
       </div>
 
-      {/* Main Content */}
-      <div className="w-[35%] flex-1 flex flex-col p-10">
-        {/* Header */}
-        <div className="flex items-center justify-end gap-4 mb-10">
-          <div className="relative w-[177px]">
-            <Progress value={77} className="h-1 bg-[#e6f0ff]" />
-            <div className="absolute top-[-10px] text-[10px] text-white font-bold text-center w-full">
-              87/100 FREE CREDITS AVAILABLE
-            </div>
-          </div>
+      <style>
+        {`
+        @keyframes shimmer {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+        .animate-shimmer {
+          position: absolute;
+          top: 0; left: 0;
+          width: 50%;
+          height: 100%;
+          background: linear-gradient(to right, rgba(255,255,255,0), rgba(255,255,255,0.2), rgba(255,255,255,0));
+          animation: shimmer 2s infinite;
+        }
 
-          <Button className="rounded-full bg-gradient-to-b from-[#FFAD00] to-[#FF6D62] hover:opacity-90 text-black px-4 h-9">
-            <Crown className="w-4 h-4 mr-2" /> UPGRADE
-          </Button>
+        @keyframes float {
+          0% { transform: translateY(0) translateX(0) scale(1); opacity: 0.3; }
+          50% { transform: translateY(-20px) translateX(10px) scale(1.05); opacity: 0.6; }
+          100% { transform: translateY(0) translateX(0) scale(1); opacity: 0.3; }
+        }
+        .animate-float { animation-name: float; animation-timing-function: ease-in-out; animation-iteration-count: infinite; }
 
-          <Button variant="ghost" size="icon" className="w-7 h-7">
-            <Bell className="w-5 h-5 text-white" />
-          </Button>
+        @keyframes float-bg {
+          0% { transform: translateY(0px) translateX(0px); }
+          50% { transform: translateY(-30px) translateX(20px); }
+          100% { transform: translateY(0px) translateX(0px); }
+        }
 
-          <Button
-            variant="ghost"
-            size="icon"
-            className="w-7 h-7 bg-white rounded-full"
-          >
-            <HelpCircle className="w-4 h-4 text-black" />
-          </Button>
+        @keyframes floating-3d {
+          0% { transform: translateZ(0px) rotateX(0deg) rotateY(0deg); }
+          25% { transform: translateZ(5px) rotateX(1deg) rotateY(1deg); }
+          50% { transform: translateZ(0px) rotateX(0deg) rotateY(0deg); }
+          75% { transform: translateZ(5px) rotateX(-1deg) rotateY(-1deg); }
+          100% { transform: translateZ(0px) rotateX(0deg) rotateY(0deg); }
+        }
+        .animate-floating-3d { animation: floating-3d 10s ease-in-out infinite; }
 
-          <Avatar className="w-7 h-7">
-            <AvatarImage src="" alt="User" />
-            <AvatarFallback>U</AvatarFallback>
-          </Avatar>
-        </div>
-
-        {/* Centered Content */}
-        <div className="flex flex-1 flex-col justify-center items-center text-center">
-          <h1 className="text-3xl text-[#b8b8c6] mb-2">
-            Welcome to Zi Cloud Dashboard!
-          </h1>
-          <p className="text-base text-[#b8b8c6] mb-10">How can we help you?</p>
-
-          {/* Feature Cards */}
-          <div className="grid grid-cols-2 gap-6 mb-8">
-            {featureCards.map((card, index) => {
-              const isAiSdr = card.title === "AI SDR";
-              const cardContent = (
-                <Card
-                  key={index}
-                  className="bg-[#1b1918] border border-[#343434] rounded-2xl h-full"
-                >
-                  <CardContent className="p-6 flex flex-col items-center text-center gap-4">
-                    <div className="w-[63px] h-[63px] bg-[#ffad001a] border border-[#ffad003d] rounded-full flex items-center justify-center">
-                      <card.icon className="w-6 h-6 text-[#ffad00]" />
-                    </div>
-                    <h2 className="text-white text-xl font-bold">
-                      {card.title}
-                    </h2>
-                    <p className="text-[#b8b8c6] text-sm">{card.description}</p>
-                  </CardContent>
-                </Card>
-              );
-
-              return isAiSdr ? (
-                <Link
-                  to="/ai-sdr-dashboard"
-                  key={index}
-                  className="hover:opacity-90"
-                >
-                  {cardContent}
-                </Link>
-              ) : (
-                cardContent
-              );
-            })}
-          </div>
-
-          <p className="text-[#454545] text-sm">many more coming soon...</p>
-        </div>
-      </div>
-    </div>
+        @keyframes pulse-slow {
+          0%, 100% { opacity: 0.3; }
+          50% { opacity: 0.6; }
+        }
+        .animate-pulse-slow { animation: pulse-slow 6s ease-in-out infinite; }
+        `}
+      </style>
+    </DashboardLayout>
   );
 }
